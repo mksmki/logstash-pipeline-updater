@@ -1,0 +1,73 @@
+# netbox_inventory.yml file in YAML format
+# Example command line: ansible-inventory -v --list -i netbox_inventory.yaml
+
+plugin: netbox.netbox.nb_inventory
+# api_endpoint: http://127.0.0.1:8000
+# token: '0123456789abcdef0123456789abcdef01234567'
+validate_certs: False
+config_context: False
+# group_by:
+#   - site
+#   - role
+#   - time_zone
+#   - utc_offset
+# device_query_filters:
+#   - has_primary_ip: 'true'
+#   - manufacturer_id: 1
+
+
+
+# plugin: netbox.netbox.nb_inventory
+# api_endpoint: http://127.0.0.1:8000
+# token: '0123456789abcdef0123456789abcdef01234567'
+    # env:
+    #     # in order of precedence
+    #     - name: NETBOX_TOKEN
+    #     - name: NETBOX_API_KEY
+# validate_certs: False
+# config_context: False
+group_by:
+  # - device_roles
+  - tags
+query_filters:
+  # - role: access-switch
+  - tag: snmp-enabled
+device_query_filters:
+  - has_primary_ip: 'true'
+
+# has_primary_ip is a useful way to filter out patch panels and other passive devices
+
+# Query filters are passed directly as an argument to the fetching queries.
+# You can repeat tags in the query string.
+
+# query_filters:
+#   - role: server
+#   - tag: web
+#   - tag: production
+
+# See the NetBox documentation at https://netbox.readthedocs.io/en/latest/api/overview/
+# the query_filters work as a logical **OR**
+#
+# Prefix any custom fields with cf_ and pass the field value with the regular NetBox query string
+
+# query_filters:
+#   - cf_foo: bar
+
+# 404 Not Found
+# http://127.0.0.1:8000/api/ipam/services/?limit=0
+# http://127.0.0.1:8000/api/virtualization/clusters/?limit=0
+
+# http://127.0.0.1:8000/api/docs/?format=openapi
+# http://127.0.0.1:8000/api/dcim/devices/?limit=0&role=access-switch&exclude=config_context
+# http://127.0.0.1:8000/api/virtualization/virtual-machines/?limit=0&role=access-switch&exclude=config_context
+# http://127.0.0.1:8000/api/dcim/sites/?limit=0
+# http://127.0.0.1:8000/api/dcim/regions/?limit=0
+# http://127.0.0.1:8000/api/tenancy/tenants/?limit=0
+# http://127.0.0.1:8000/api/dcim/racks/?limit=0
+# ! http://127.0.0.1:8000/api/dcim/rack-groups/?limit=0
+# http://127.0.0.1:8000/api/dcim/device-roles/?limit=0
+# http://127.0.0.1:8000/api/dcim/platforms/?limit=0
+# http://127.0.0.1:8000/api/dcim/device-types/?limit=0
+# http://127.0.0.1:8000/api/dcim/manufacturers/?limit=0
+# http://127.0.0.1:8000/api/virtualization/clusters/?limit=0
+# http://127.0.0.1:8000/api/ipam/services/?limit=0

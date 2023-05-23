@@ -1,0 +1,1 @@
+https://galaxy.ansible.com/download/netbox-netbox-3.13.0.tar.gz

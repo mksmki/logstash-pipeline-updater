@@ -1,0 +1,13 @@
+# NetBox inventory.yaml file in YAML format
+
+plugin: netbox.netbox.nb_inventory
+# api_endpoint: <env-var NETBOX_API>
+# token: <env-var NETBOX_TOKEN>
+validate_certs: False
+config_context: False
+group_by:
+  - tags
+query_filters:
+  - tag: snmp-enabled
+device_query_filters:
+  - has_primary_ip: 'true'

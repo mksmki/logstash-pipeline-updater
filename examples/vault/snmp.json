@@ -1,0 +1,8 @@
+{
+    "username": "Username",
+    "auth_protocol": "sha",
+    "auth_pass": "ShaPassword",
+    "priv_protocol": "aes",
+    "priv_pass": "AesPasword",
+    "security_level": "authNoPriv"
+}

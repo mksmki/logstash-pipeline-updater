@@ -1,0 +1,35 @@
+---
+- name: DEBUG Playbook
+  hosts: all
+  gather_facts: false
+  become: false
+
+  vars_files:
+    - vars/example.yaml
+
+  tasks:
+    - name: From JSON-string to data struct
+      set_fact:
+        netbox_devices_list: "{{ netbox_reply | from_json }}"
+
+    - name: DEBUG
+      debug:
+        var: netbox_devices_list
+
+    # - name: Get IPs from device list
+    #   debug:
+    #     msg: "IP: {{ item.value.primary_ip.address.split('/')[0] }}"
+    #   loop: "{{ netbox_devices_list | list }}"
+    #   loop_control:
+    #     label: "{{ item.value.name }}"
+
+    - name: MAIN | Query list of devices from NetBox
+      include_tasks: "add_hosts.yaml"
+      loop: "{{ netbox_devices_list | list }}"
+      loop_control:
+        label: "{{ netbox_device.value.name }}"
+        loop_var: netbox_device
+
+    - name: DEBUG
+      debug:
+        var: snmp_hosts_list

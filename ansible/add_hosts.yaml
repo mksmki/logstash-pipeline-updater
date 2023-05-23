@@ -1,0 +1,8 @@
+---
+- name: Add Hosts | Create new entry
+  set_fact:
+    snmp_host: "{host => \"tcp:{{ netbox_device.value.primary_ip.address.split('/')[0] }}/161\" version => \"3\"}"
+
+- name: Add Hosts | Append entry to list
+  set_fact:
+    snmp_hosts_list: "{{ snmp_hosts_list | default([]) + [ snmp_host ] }}"

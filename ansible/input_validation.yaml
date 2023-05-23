@@ -1,0 +1,20 @@
+---
+- name: Input Validation | Verify Ansible version
+  ansible.builtin.assert:
+    that:
+      - ansible_version.major == ansible_version_tested.major
+      - ansible_version.minor == ansible_version_tested.minor
+    fail_msg: "Ansible version {{ ansible_version.full }} is not verified to run this playbook"
+
+- name: Input Validation | Verify Vault credentials is provided
+  ansible.builtin.assert:
+    that:
+      - VAULT_URL | default('') | length > 0
+      - VAULT_TOKEN | default('') | length > 0
+    fail_msg: "Ensure that VAULT_URL and VAULT_TOKEN variables are set"
+
+- name: Input Validation | Verify Elastic URL is set
+  ansible.builtin.assert:
+    that:
+      - ELASTIC_URL | default('') | length > 0
+    fail_msg: "Consider setting ELASTIC_URL variable"

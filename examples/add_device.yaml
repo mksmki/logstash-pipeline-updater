@@ -1,0 +1,39 @@
+---
+- hosts: all
+  gather_facts: false
+  become: false
+
+  vars:
+    # Test values for DEV environment
+    netbox_token: 0123456789abcdef0123456789abcdef01234567
+    netbox_url: http://127.0.0.1:8000
+
+  tasks:
+    - name: Greeting from Ansible
+      debug:
+        msg: "Hello from Ansible"
+
+    - name: Add device to NetBox
+      netbox.netbox.netbox_device:
+        data:
+          # airflow: "front-to-rear"
+          name: 'ws2960-24t switch'
+          comments: "Comments for the device"
+          custom_fields: {}
+          device_type: 'ws2960-24t'
+          device_role: 'access-switch'
+          serial: '$ERI@LNUMBER'
+          rack: Main Rack
+          position: 10
+          face: Front
+          site: main-dc
+
+        netbox_token: "{{ netbox_token }}"
+        netbox_url: "{{ netbox_url }}"
+        state: present
+        validate_certs: false
+      register: result
+
+    - name: NetBox response
+      debug:
+        msg: "NexBox: {{ result }}"

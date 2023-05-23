@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  become: false
+
+  vars:
+    # Test values for DEV environment
+    netbox_token: 0123456789abcdef0123456789abcdef01234567
+    netbox_url: http://127.0.0.1:8000
+
+  tasks:
+    - name: Test Playbook for Lookup plugin
+      debug:
+        msg: "Test started"
+
+    - name: Get IP-address value from NetBox
+      debug:
+        msg: "{{ lookup('nb_lookup') }}"

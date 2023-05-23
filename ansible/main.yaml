@@ -1,0 +1,74 @@
+- name: Logstash dynamic pipeline updater
+  hosts: all
+  # ! Grouping is performed by inventory plugin
+  # hosts: tags_snmp-enabled
+  gather_facts: false
+  become: false
+
+  vars_files:
+    - vars/common.yaml
+
+  tasks:
+    - name: MAIN | Input validation
+      include_tasks: "input_validation.yaml"
+
+    # query a list of devices in a playbook
+    # https://docs.ansible.com/ansible/latest/collections/netbox/netbox/nb_lookup_lookup.html
+    #
+    # - name: MAIN | Query list of devices from NetBox
+    #   debug:
+    #     msg: >
+    #       Device {{ netbox_device.value.name }} (ID: {{ netbox_device.key }}) was
+    #       manufactured by {{ netbox_device.value.device_type.manufacturer.name }}
+    #       Primary IP: {{ netbox_device.value.primary_ip.address }}
+    #   loop: "{{ query('netbox.netbox.nb_lookup', 'devices',
+    #       api_filter='has_primary_ip=true tags=snmp-enabled' ) }}"
+    #   loop_control:
+    #     label: "{{ netbox_device.value.name }}"
+    #     loop_var: netbox_device
+
+    # ! Plugin netbox.netbox.nb_lookup require following environment variables:
+    # - NETBOX_API
+    # - NETBOX_TOKEN
+    - name: MAIN | Query list of devices from NetBox
+      include_tasks: "add_hosts.yaml"
+      loop: "{{ query('netbox.netbox.nb_lookup', 'devices',
+          api_filter='has_primary_ip=true tags=snmp-enabled' ) }}"
+      loop_control:
+        label: "{{ netbox_device.value.name }}"
+        loop_var: netbox_device
+
+    - name: DEBUG
+      debug:
+        var: snmp_hosts_list
+
+    - name: MAIN | Get Secrets from Vault
+      set_fact:
+        logstash_secret: "{{ lookup('hashi_vault',
+          'secret={{ vault_elastic_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"
+        snmp_secret: "{{ lookup('hashi_vault',
+          'secret={{ vault_snmp_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"
+
+    - name: DEBUG
+      debug:
+        var: logstash_secret
+
+    - name: DEBUG
+      debug:
+        var: snmp_secret
+
+    - name: MAIN | Populate values for SNMP configuration
+      debug:
+        msg: >
+          input {
+            snmp {
+              hosts => [{{ snmp_hosts_list | join(',') }}]
+              get => [{{ device_type_oid_mapping.common_oids | join(',') }}]
+              security_name => "{{ snmp_secret['username'] }}"
+              auth_protocol => "{{ snmp_secret['auth_protocol'] }}"
+              auth_pass => "{{ snmp_secret['auth_pass'] }}"
+              priv_protocol => "{{ snmp_secret['priv_protocol'] }}"
+              priv_pass => "{{ snmp_secret['priv_pass'] }}"
+              security_level => "{{ snmp_secret['security_level'] }}"
+            }
+          }
