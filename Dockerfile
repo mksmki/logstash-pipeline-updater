@@ -1,6 +1,6 @@
 FROM    oraclelinux:8
 
-ARG     version="0.7"
+ARG     version="1.0.0"
 ARG     username="ansible"
 ARG     group="ansible"
 
@@ -88,7 +88,7 @@ RUN \
 COPY    --chown=${username}:${group} ansible/ ${WORKDIR}/
 
 # To avoid execution with root privileges
-# USER    ${username}
+USER    ${username}
 
 WORKDIR ${WORKDIR}
 # VOLUME [ "${WORKDIR}" ]

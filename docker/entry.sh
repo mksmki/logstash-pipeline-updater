@@ -13,9 +13,11 @@ trap cleanup SIGINT SIGTERM
 
 "$@"
 
-[ -z $NETBOX_API -o -z NETBOX_TOKEN ] && {
+if [ -z "${NETBOX_API}" -o -z "${NETBOX_TOKEN}" ]
+then
     echo "Error: NETBOX_API or NETBOX_TOKEN is empty"
-}
+    exit 1
+fi
 
 echo "[$(date --iso-8601=seconds)] Starting..."
 
