@@ -18,3 +18,9 @@
     that:
       - ELASTIC_URL | default('') | length > 0
     fail_msg: "Consider setting ELASTIC_URL variable"
+
+- name: Input Validation | Verify PIPELINE_ID is set
+  ansible.builtin.assert:
+    that:
+      - PIPELINE_ID | default('') | length > 0
+    fail_msg: "Elasticsearch Logstash Pipeline name (PIPELINE_ID) is empty"

@@ -3,6 +3,9 @@ ansible_version_tested:
   major: 2
   minor: 13
 
+# ! Debugging Enabled
+playbook_debugging_enabled: false
+
 # SNMP OIDs per device type mapping
 device_type_oid_mapping:
   common_oids:
@@ -18,9 +21,8 @@ device_type_oid_mapping:
 vault_elastic_secret_path: secret/data/logstash
 vault_snmp_secret_path: secret/data/snmp
 
-snmp_username: '<username from Vault>'
-snmp_auth_protocol: 'auth_proto'
-snmp_auth_pass: 'auth_pass'
-snmp_priv_protocol: 'priv_proto'
-snmp_priv_pass: 'priv_pass'
-snmp_security_level: 'sec_level'
+# Values from Vault
+logstash_secret: "{{ lookup('hashi_vault',
+  'secret={{ vault_elastic_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"
+snmp_secret: "{{ lookup('hashi_vault',
+  'secret={{ vault_snmp_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"

@@ -1,10 +1,10 @@
 FROM    oraclelinux:8
 
-ARG     version="0.5"
+ARG     version="0.7"
 ARG     username="ansible"
 ARG     group="ansible"
 
-LABEL   name='logstash-config-updater'
+LABEL   name='logstash-pipeline-updater'
 LABEL   maintainer='Network Observability & Automation Group'
 LABEL   desription='Logstash Dynamic Pipeline Updater'
 LABEL   version='${version}'
@@ -19,6 +19,7 @@ ENV     VAULT_TOKEN=""
 ENV     NETBOX_API=""
 ENV     NETBOX_TOKEN=""
 ENV     ELASTIC_URL=""
+ENV     PIPELINE_ID=""
 
 USER root
 
@@ -55,23 +56,6 @@ RUN \
 # Copy pre-downloaded packages
 COPY files/* /tmp/
 
-# pip3 install \
-#     PyNaCl-1.5.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl \
-#     pynetbox-7.0.1-py3-none-any.whl \
-#     bcrypt-4.0.1-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
-#     paramiko-3.1.0-py3-none-any.whl \
-#     pytz-2023.3-py2.py3-none-any.whl \
-#     resolvelib-0.8.1-py2.py3-none-any.whl \
-#     Jinja2-3.1.2-py3-none-any.whl \
-#     MarkupSafe-2.1.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
-#     packaging-23.1-py3-none-any.whl \
-#     requests-2.30.0-py3-none-any.whl \
-#     pyhcl-0.4.4-py3-none-any.whl \
-#     hvac-1.1.0-py3-none-any.whl \
-#     && \
-# sha256sum --check --ignore-missing requirements_checksums.txt && \
-# sha256sum --check --ignore-missing downloads_checksums.txt && \
-
 # Container image payload
 RUN \
     cd /tmp/ && \
@@ -104,7 +88,7 @@ RUN \
 COPY    --chown=${username}:${group} ansible/ ${WORKDIR}/
 
 # To avoid execution with root privileges
-USER    ${username}
+# USER    ${username}
 
 WORKDIR ${WORKDIR}
 # VOLUME [ "${WORKDIR}" ]

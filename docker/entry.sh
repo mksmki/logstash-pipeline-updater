@@ -23,10 +23,11 @@ while [[ $EXIT_SIGNAL -eq 0 ]]; do
     echo "$(date --iso-8601=seconds) Running..."
 
     # /usr/bin/env ansible-playbook -i netbox_inventory.yaml \
-    /usr/bin/env ansible-playbook -i 127.0.0.1, \
+    /usr/bin/env ansible-playbook -i localhost, \
         -e "VAULT_URL=\"${VAULT_URL}\"" \
         -e "VAULT_TOKEN=\"${VAULT_TOKEN}\"" \
         -e "ELASTIC_URL=\"${ELASTIC_URL}\"" \
+        -e "PIPELINE_ID=\"${PIPELINE_ID}\"" \
         main.yaml
 
     sleep ${RUN_INTERVAL:-30}
@@ -34,5 +35,6 @@ done
 
 exit 0
 
+        # -e "ansible_connection=local" \
         # -e "NETBOX_API=\"${NETBOX_API}\"" \
         # -e "NETBOX_TOKEN=\"${NETBOX_TOKEN}\"" \

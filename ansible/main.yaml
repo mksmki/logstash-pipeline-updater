@@ -1,5 +1,5 @@
 - name: Logstash dynamic pipeline updater
-  hosts: all
+  hosts: localhost
   # ! Grouping is performed by inventory plugin
   # hosts: tags_snmp-enabled
   gather_facts: false
@@ -12,22 +12,9 @@
     - name: MAIN | Input validation
       include_tasks: "input_validation.yaml"
 
+    # ! Plugin netbox.netbox.nb_lookup requires following environment variables:
     # query a list of devices in a playbook
     # https://docs.ansible.com/ansible/latest/collections/netbox/netbox/nb_lookup_lookup.html
-    #
-    # - name: MAIN | Query list of devices from NetBox
-    #   debug:
-    #     msg: >
-    #       Device {{ netbox_device.value.name }} (ID: {{ netbox_device.key }}) was
-    #       manufactured by {{ netbox_device.value.device_type.manufacturer.name }}
-    #       Primary IP: {{ netbox_device.value.primary_ip.address }}
-    #   loop: "{{ query('netbox.netbox.nb_lookup', 'devices',
-    #       api_filter='has_primary_ip=true tags=snmp-enabled' ) }}"
-    #   loop_control:
-    #     label: "{{ netbox_device.value.name }}"
-    #     loop_var: netbox_device
-
-    # ! Plugin netbox.netbox.nb_lookup require following environment variables:
     # - NETBOX_API
     # - NETBOX_TOKEN
     - name: MAIN | Query list of devices from NetBox
@@ -38,28 +25,32 @@
         label: "{{ netbox_device.value.name }}"
         loop_var: netbox_device
 
+    # ! DEBUG
     - name: DEBUG
       debug:
         var: snmp_hosts_list
+      when:
+        - playbook_debugging_enabled | bool
 
-    - name: MAIN | Get Secrets from Vault
-      set_fact:
-        logstash_secret: "{{ lookup('hashi_vault',
-          'secret={{ vault_elastic_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"
-        snmp_secret: "{{ lookup('hashi_vault',
-          'secret={{ vault_snmp_secret_path }} token={{ VAULT_TOKEN }} validate_certs=false url={{ VAULT_URL }}') }}"
-
+    # ! DEBUG
     - name: DEBUG
       debug:
         var: logstash_secret
+      when:
+        - playbook_debugging_enabled | bool
 
+    # ! DEBUG
     - name: DEBUG
       debug:
         var: snmp_secret
+      when:
+        - playbook_debugging_enabled | bool
 
+    # For the details see Elastic API Documentation
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-put-pipeline.html
     - name: MAIN | Populate values for SNMP configuration
-      debug:
-        msg: >
+      set_fact:
+        logstash_snmp_config: >
           input {
             snmp {
               hosts => [{{ snmp_hosts_list | join(',') }}]
@@ -72,3 +63,50 @@
               security_level => "{{ snmp_secret['security_level'] }}"
             }
           }
+
+    - name: MAIN | Prepare body for API call
+      set_fact:
+        logstash_api_call_body:
+          description: "Network SNMP"
+          last_modified: "{{ lookup('pipe', 'date --utc +%FT%T.%3NZ') }}"
+          pipeline_metadata:
+            type: "logstash_pipeline"
+          username: "elastic"
+          pipeline: "{{ logstash_snmp_config }}"
+          pipeline_settings:
+            pipeline.workers: 1
+            pipeline.batch.size: 125
+            pipeline.batch.delay: 50
+            queue.type: "memory"
+            queue.max_bytes: "1gb"
+            queue.checkpoint.writes: 1024
+
+    # ! DEBUG
+    - name: DEBUG
+      debug:
+        var: logstash_api_call_body
+      when:
+        - playbook_debugging_enabled | bool
+
+    # ! DEBUG
+    - name: DEBUG
+      debug:
+        var: ELASTIC_URL
+      when:
+        - playbook_debugging_enabled | bool
+
+    - name: MAIN | Update Logstash SNMP Pipeline configuration
+      uri:
+        body_format: json
+        method: PUT
+        url: "{{ ELASTIC_URL }}/_logstash/pipeline/{{ PIPELINE_ID }}"
+        url_username: "{{ logstash_secret['username'] }}"
+        url_password: "{{ logstash_secret['password'] }}"
+        timeout: 30
+        body: "{{ logstash_api_call_body }}"
+        status_code:
+          - 200
+          - 201
+      delegate_to: localhost
+      vars:
+        ansible_connection: local

@@ -10,8 +10,9 @@ docker run \
     -e 'VAULT_TOKEN=hvs.GUvT7PAnGba4eNUpePdNERSO' \
     -e 'NETBOX_API=http://netbox:8080' \
     -e 'NETBOX_TOKEN=0123456789abcdef0123456789abcdef01234567' \
-    -e 'ELASTIC_URL=http://elasticsearch:9000' \
-    logstash-pipeline-updater:latest
+    -e 'ELASTIC_URL=http://elasticsearch:9200' \
+    -e 'PIPELINE_ID=sample-pipeline' \
+    mksmki/logstash-pipeline-updater:latest
 
     # --entrypoint /bin/bash \
     # -v "$(pwd)/ansible:/ansible" \
